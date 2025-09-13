@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Random HTML Playground</title>
+  <style>
+    :root{
+      --bg: #0f1724;
+      --card: rgba(255,255,255,0.06);
+      --glass: rgba(255,255,255,0.04);
+      --accent: #7c3aed;
+      color-scheme: dark;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(124,58,237,0.08), transparent),
+                  radial-gradient(900px 500px at 90% 90%, rgba(14,165,233,0.06), transparent),
+                  var(--bg);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,'Helvetica Neue',Arial;
+      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#e6eef8;
+    }
+
+    .frame{width:min(1000px,95vw);padding:28px;border-radius:16px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);box-shadow:0 10px 30px rgba(2,6,23,.6);backdrop-filter: blur(6px);}
+
+    header{display:flex;align-items:center;gap:16px;margin-bottom:18px}
+    .logo{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#06b6d4);display:flex;align-items:center;justify-content:center;font-weight:700}
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:rgba(230,238,248,0.75);font-size:13px}
+
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+
+    .card{background:var(--card);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .big{min-height:420px;display:flex;flex-direction:column;gap:12px;padding:18px}
+
+    .controls{display:flex;flex-wrap:wrap;gap:10px}
+    button{background:var(--glass);border:1px solid rgba(255,255,255,0.04);padding:10px 12px;border-radius:10px;color:inherit;cursor:pointer}
+    input[type=range]{width:140px}
+
+    .canvas{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.015), transparent);border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+    .shape{width:120px;height:120px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+
+    .sidebar{display:flex;flex-direction:column;gap:12px}
+    .meta{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .quote{font-style:italic;color:rgba(230,238,248,0.85)}
+
+    footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;color:rgba(230,238,248,0.6);font-size:13px}
+
+    /* animated background bubbles */
+    .bubble{position:absolute;border-radius:50%;opacity:.08;filter:blur(18px);transform:translate(-50%,-50%)}
+
+    /* responsive */
+    @media (max-width:880px){.grid{grid-template-columns:1fr;}.sidebar{order:2}}
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <header>
+      <div class="logo">RND</div>
+      <div>
+        <h1>Random HTML Playground</h1>
+        <p class="lead">Klick — generiere — staune. Jede Aktion macht etwas Zufälliges.</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card big">
+        <div class="controls">
+          <button id="randAll">Alles zufällig</button>
+          <button id="randColor">Hintergrund-Farbe</button>
+          <button id="randShape">Form</button>
+          <button id="randText">Text</button>
+          <label title="Anzahl Blasen">Bubbles <input id="bubbleCount" type="range" min="0" max="12" value="6"></label>
+          <button id="toggleAnim">Animation an/aus</button>
+        </div>
+
+        <div class="canvas" id="canvas" aria-live="polite">
+          <!-- dynamic rendering area -->
+          <div class="bubble" id="b1" style="width:320px;height:320px;left:10%;top:20%"></div>
+          <div class="bubble" id="b2" style="width:220px;height:220px;left:85%;top:80%"></div>
+          <div id="shapeHolder" style="z-index:2"></div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px;flex-wrap:wrap">
+          <input id="customText" placeholder="Eigener Text (leer = random)" style="flex:1;padding:8px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit">
+          <button id="applyText">Setz Text</button>
+        </div>
+
+        <footer>
+          <div id="stats">Letzte Aktion: —</div>
+          <div>Made with ⚡️</div>
+        </footer>
+      </section>
+
+      <aside class="sidebar">
+        <div class="card">
+          <strong>Zufalls-Zitat</strong>
+          <p class="quote" id="quote">"Die beste Zeit, einen Baum zu pflanzen, war vor 20 Jahren. Die zweitbeste Zeit ist jetzt."</p>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button id="newQuote">Neues Zitat</button>
+            <button id="copyCode">HTML kopieren</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>Optionen</strong>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+            <label>Form-Typ
+              <select id="shapeType">
+                <option value="square">Quadrat</option>
+                <option value="circle">Kreis</option>
+                <option value="blob">Blob</option>
+                <option value="triangle">Dreieck</option>
+              </select>
+            </label>
+            <label>Größe <input id="shapeSize" type="range" min="60" max="420" value="120"></label>
+          </div>
+        </div>
+
+        <div class="card">
+          <strong>Shortcuts</strong>
+          <ul style="margin:8px 0 0 16px;padding:0">
+            <li>R = Alles zufällig</li>
+            <li>C = Farbe</li>
+            <li>S = Form</li>
+            <li>T = Text</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    // Minimal utility
+    const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const randFloat = (min, max) => Math.random() * (max - min) + min;
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+    const quotes = [
+      "Phantasie ist wichtiger als Wissen.",
+      "Gut ist besser als perfekt.",
+      "Fehler sind Beweise, dass du es versucht hast.",
+      "Kleine Schritte sind auch Fortschritt.",
+      "Das Geheimnis des Vorwärtskommens ist, den ersten Schritt zu tun."
+    ];
+
+    const colors = ["#ff6b6b","#f59e0b","#06b6d4","#7c3aed","#34d399","#fb7185","#60a5fa"];
+
+    const canvas = document.getElementById('canvas');
+    const shapeHolder = document.getElementById('shapeHolder');
+    const stats = document.getElementById('stats');
+    const quoteEl = document.getElementById('quote');
+
+    function setStats(msg){ stats.textContent = 'Letzte Aktion: ' + msg + ' — ' + new Date().toLocaleTimeString(); }
+
+    function clearShape(){ shapeHolder.innerHTML = ''; }
+
+    function makeShape({type, size, bg, text}){
+      clearShape();
+      const el = document.createElement('div');
+      el.className = 'shape';
+      el.style.width = el.style.height = size + 'px';
+      el.style.background = bg;
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.borderRadius = (type==='circle')? '50%': (type==='blob')? '30% 70% 60% 40% / 40% 30% 70% 60%': '10px';
+      el.style.fontSize = Math.max(12, Math.round(size/8)) + 'px';
+      el.style.boxShadow = '0 10px 30px rgba(2,6,23,0.6) inset, 0 6px 18px rgba(0,0,0,0.4)';
+
+      if(type==='triangle'){
+        // CSS triangle using border trick
+        const wrapper = document.createElement('div');
+        wrapper.style.width = 0; wrapper.style.height = 0;
+        wrapper.style.borderLeft = (size/2)+'px solid transparent';
+        wrapper.style.borderRight = (size/2)+'px solid transparent';
+        wrapper.style.borderBottom = size+'px solid '+bg;
+        wrapper.style.transform = 'translateY(-10px)';
+        shapeHolder.appendChild(wrapper);
+      } else {
+        el.textContent = text||'';
+        shapeHolder.appendChild(el);
+      }
+    }
+
+    function randomBackground(){
+      const c = pick(colors);
+      document.body.style.background = `radial-gradient(1200px 600px at ${rand(0,100)}% ${rand(0,100)}%, ${c}12, transparent), radial-gradient(900px 500px at ${rand(0,100)}% ${rand(0,100)}%, ${pick(colors)}0c, transparent), var(--bg)`;
+      setStats('Hintergrund geändert');
+    }
+
+    function randomShape(){
+      const type = document.getElementById('shapeType').value || pick(['square','circle','blob','triangle']);
+      const size = Number(document.getElementById('shapeSize').value) || rand(60,220);
+      const color = pick(colors);
+      makeShape({type,size,bg:color+'33',text:pick(['Hi',':)','RND','!','-'])});
+      setStats('Form generiert ('+type+')');
+    }
+
+    function randomQuote(){
+      quoteEl.textContent = pick(quotes);
+      setStats('Zitat gewechselt');
+    }
+
+    function randomAll(){ randomBackground(); randomShape(); randomQuote(); }
+
+    // bubbles
+    function renderBubbles(count){
+      // remove existing light bubbles
+      const bubs = canvas.querySelectorAll('.bubble');
+      bubs.forEach(b=>b.remove());
+      for(let i=0;i<count;i++){
+        const b = document.createElement('div');
+        b.className='bubble';
+        const size = rand(80,420);
+        b.style.width = b.style.height = size+'px';
+        b.style.left = rand(0,100)+'%';
+        b.style.top = rand(0,100)+'%';
+        b.style.background = pick(colors);
+        b.style.opacity = randFloat(0.03,0.15).toFixed(2);
+        b.style.filter = 'blur('+rand(6,26)+'px)';
+        b.dataset.speed = randFloat(0.2,1.4);
+        canvas.appendChild(b);
+      }
+    }
+
+    let animRunning = true;
+    function animate(){
+      if(!animRunning) return;
+      const bubs = canvas.querySelectorAll('.bubble');
+      bubs.forEach(b=>{
+        const speed = parseFloat(b.dataset.speed)||0.6;
+        const left = parseFloat(b.style.left) || 50;
+        let n = left + Math.sin(Date.now()/10000*speed + left) * 0.05 * speed;
+        // drift
+        b.style.left = ((n + 100) % 100) + '%';
+      });
+      requestAnimationFrame(animate);
+    }
+
+    // wire up
+    document.getElementById('randAll').addEventListener('click', randomAll);
+    document.getElementById('randColor').addEventListener('click', randomBackground);
+    document.getElementById('randShape').addEventListener('click', randomShape);
+    document.getElementById('randText').addEventListener('click', ()=>{
+      const t = pick(['Hallo Welt','Zufall','Spruch','✨ Magic ✨','123']);
+      document.getElementById('customText').value = t; document.getElementById('applyText').click();
+    });
+    document.getElementById('applyText').addEventListener('click', ()=>{
+      const txt = document.getElementById('customText').value.trim() || pick(['Wow','RND','HEY',':)']);
+      const currentType = document.getElementById('shapeType').value;
+      const size = Number(document.getElementById('shapeSize').value);
+      makeShape({type:currentType,size:bgSafe(size),bg:pick(colors)+'66',text:txt});
+      setStats('Text gesetzt');
+    });
+
+    function bgSafe(n){ return Math.max(40,Math.min(420,n)); }
+
+    document.getElementById('newQuote').addEventListener('click', randomQuote);
+    document.getElementById('bubbleCount').addEventListener('input', (e)=>{ renderBubbles(Number(e.target.value)); setStats('Bubbles: '+e.target.value); });
+    document.getElementById('toggleAnim').addEventListener('click', ()=>{ animRunning = !animRunning; if(animRunning){ animate(); setStats('Animation gestartet') } else setStats('Animation gestoppt'); });
+
+    document.getElementById('copyCode').addEventListener('click', ()=>{
+      const html = document.documentElement.outerHTML;
+      navigator.clipboard.writeText(html).then(()=>{ setStats('HTML in Zwischenablage kopiert') });
+    });
+
+    // keyboard shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.key.toLowerCase()==='r') randomAll();
+      if(e.key.toLowerCase()==='c') randomBackground();
+      if(e.key.toLowerCase()==='s') randomShape();
+      if(e.key.toLowerCase()==='t') document.getElementById('randText').click();
+    });
+
+    // initialize
+    renderBubbles(Number(document.getElementById('bubbleCount').value));
+    makeShape({type:'square',size:120,bg:'#7c3aed44',text:'RND'});
+    animate();
+
+  </script>
+</body>
+</html>
